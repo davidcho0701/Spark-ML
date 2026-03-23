@@ -1,6 +1,6 @@
 services:
   spark:
-    image: bitnami/spark:3.4.0
+    image: apache/spark:latest
     container_name: spark-ml-container
     environment:
       SPARK_MODE: master
