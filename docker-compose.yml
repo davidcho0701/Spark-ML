@@ -1,20 +1,12 @@
 services:
   spark:
-    image: apache/spark:latest
+    image: jupyter/pyspark-notebook:latest
     container_name: spark-ml-container
-    environment:
-      SPARK_MODE: master
-      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
-      SPARK_RPC_ENCRYPTION_ENABLED: "no"
-      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: "no"
-      SPARK_SSL_ENABLED: "no"
     ports:
-      - "8080:8080"    # Spark Master Web UI
-      - "4040:4040"    # Spark Application Web UI
-      - "7077:7077"    # Spark Master
+      - "8080:8080"    # Jupyter
+      - "4040:4040"    # Spark Application UI
     volumes:
-      - ./app:/home/spark/app
-      - ./data:/home/spark/data
+      - ./app:/home/jovyan/app
     stdin_open: true
     tty: true
-    command: tail -f /dev/null
+    command: /bin/bash

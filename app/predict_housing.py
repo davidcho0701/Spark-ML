@@ -11,7 +11,7 @@
 실행 방식:
   docker-compose exec spark spark-submit \
     --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
-    /home/spark/app/predict_housing.py
+    /home/jovyan/app/predict_housing.py
 
 데이터 공급 (Mac):
   nc -l 9999  # 서버 시작 후, 아래 명령어 실행
@@ -44,7 +44,7 @@ print("[INFO] SparkSession 생성 완료")
 # ============================================================================
 # 2단계: 학습된 모델 로드
 # ============================================================================
-model_path = "/home/spark/app/model"
+model_path = "/home/jovyan/app/model"
 print(f"[INFO] 모델 로드 시작: {model_path}")
 
 try:

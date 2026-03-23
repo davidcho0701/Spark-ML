@@ -6,10 +6,10 @@
 
 ### 기술 스택
 
-- **Apache Spark**: 3.5.0
+- **Apache Spark**: 3.5.0+
 - **PySpark**: Spark Python API
 - **Structured Streaming**: 실시간 데이터 처리
-- **Docker**: Bitnami Spark 컨테이너
+- **Docker**: Jupyter PySpark Notebook (jupyter/pyspark-notebook:latest)
 - **Machine Learning**: LinearRegression 모델
 
 ### 실습 시나리오
