@@ -1,7 +1,5 @@
 # Spark ML 실무 발제 - 부동산 가격 예측 프로젝트
 
-30분 분량의 실무 중심 Spark ML 교육 프로젝트입니다. 실시간 데이터 스트리밍으로 머신러닝 모델을 활용하는 전체 파이프라인을 경험할 수 있습니다.
-
 ## 📋 프로젝트 개요
 
 ### 기술 스택
@@ -24,7 +22,6 @@
 
 - 소켓을 통해 실시간 부동산 정보 수집
 - 저장된 모델을 로드하여 즉시 가격 예측
-- **실행자**: 수강생 (실습)
 
 ### 데이터 구조
 
@@ -99,8 +96,6 @@ docker-compose ps
 
 ### 3단계: Offline Phase - 모델 학습
 
-**발제자가 실행** (수강생 실습 전에 미리 준비)
-
 ```bash
 docker-compose exec spark spark-submit /app/train_model.py
 ```
@@ -119,7 +114,7 @@ docker-compose exec spark spark-submit /app/train_model.py
 [INFO] 모델 저장 완료: /app/model
 ```
 
-### 4단계: Online Phase - 실시간 예측 (수강생 실습)
+### 4단계: Online Phase - 실시간 예측 
 
 이 단계에서는 **컨테이너 안에서 nc 서버를 열고**, 같은 컨테이너 안의 Spark가 그 서버에 붙어서 데이터를 읽습니다. (localhost 기준이 같도록 단순화)
 
