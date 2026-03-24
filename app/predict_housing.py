@@ -9,9 +9,7 @@
   예) "84,15,300" -> 면적: 84m², 층수: 15층, 역거리: 300m
 
 실행 방식:
-  docker-compose exec spark spark-submit \
-    --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
-    /home/jovyan/app/predict_housing.py
+  docker-compose exec spark spark-submit /app/predict_housing.py
 
 데이터 공급 (Mac):
   nc -l 9999  # 서버 시작 후, 아래 명령어 실행
@@ -44,7 +42,7 @@ print("[INFO] SparkSession 생성 완료")
 # ============================================================================
 # 2단계: 학습된 모델 로드
 # ============================================================================
-model_path = "/home/jovyan/app/model"
+model_path = "/app/model"
 print(f"[INFO] 모델 로드 시작: {model_path}")
 
 try:
@@ -58,8 +56,8 @@ except Exception as e:
 # ============================================================================
 # 3단계: 소켓에서 데이터 읽기 (Structured Streaming)
 # ============================================================================
-# localhost:9999에서 텍스트 데이터를 읽습니다
-# 각 라인이 하나의 데이터포인트입니다
+# 컨테이너 내부 localhost:9999에서 텍스트 데이터를 읽습니다.
+# (같은 컨테이너 안에서 `nc -lk 9999` 로 열어둔 서버에 접속)
 
 df_raw = spark.readStream \
     .format("socket") \

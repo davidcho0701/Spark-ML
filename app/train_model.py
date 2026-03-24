@@ -6,7 +6,7 @@
       이 모델은 predict_housing.py에서 실시간 예측에 사용됩니다.
 
 실행 방식:
-  docker-compose exec spark spark-submit /home/jovyan/app/train_model.py
+  docker-compose exec spark spark-submit /app/train_model.py
 
 출력:
   - app/model/ 폴더에 PipelineModel 저장
@@ -42,7 +42,7 @@ schema = StructType([
 
 # CSV 파일 로드
 df = spark.read.schema(schema).csv(
-    "/home/jovyan/app/data/sample_house.csv",
+    "/app/data/sample_house.csv",
     header=True
 )
 
@@ -105,7 +105,7 @@ predictions.select("area", "floor", "distance_to_station", "price", "prediction"
 # ============================================================================
 # 8단계: 모델 저장
 # ============================================================================
-model_path = "/home/jovyan/app/model"
+model_path = "/app/model"
 
 # 기존 모델이 있으면 삭제
 import shutil

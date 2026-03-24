@@ -9,7 +9,7 @@
 - **Apache Spark**: 3.5.0+
 - **PySpark**: Spark Python API
 - **Structured Streaming**: 실시간 데이터 처리
-- **Docker**: Jupyter PySpark Notebook (jupyter/pyspark-notebook:latest)
+- **Docker**: python:3.11 기반 커스텀 이미지 (Dockerfile + docker-compose.yml)
 - **Machine Learning**: LinearRegression 모델
 
 ### 실습 시나리오
@@ -53,9 +53,32 @@ Spark-ML/
 └── .gitignore
 ```
 
-## 🚀 설치 및 실행
+## 🚀 빠른 시작 (Quick Start)
 
-### 1단계: 프로젝트 클론
+**가장 빠르게 실습하는 방법:**
+
+```bash
+# 1. 프로젝트 클론 및 이동
+git clone https://github.com/YOUR_GITHUB/Spark-ML.git
+cd Spark-ML
+
+# 2. Docker 컨테이너 시작 (처음 실행이면 --build 권장)
+docker-compose up -d --build
+
+# 3. PySpark 셸로 즉시 실습 시작
+docker-compose exec spark /bin/bash
+pyspark --master local[*]
+
+# 이제 Python 명령어 입력 가능:
+>>> df = spark.read.csv("/app/data/sample_house.csv", header=True, inferSchema=True)
+>>> df.show()
+>>> df.count()
+>>> exit()
+```
+
+---
+
+## 🚀 상세 설치 및 실행
 
 ```bash
 git clone https://github.com/YOUR_GITHUB/Spark-ML.git
@@ -65,7 +88,7 @@ cd Spark-ML
 ### 2단계: Docker 컨테이너 시작
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build   # 처음 한 번은 --build, 이후에는 생략 가능
 ```
 
 컨테이너 상태 확인:
@@ -79,7 +102,7 @@ docker-compose ps
 **발제자가 실행** (수강생 실습 전에 미리 준비)
 
 ```bash
-docker-compose exec spark spark-submit /home/spark/app/train_model.py
+docker-compose exec spark spark-submit /app/train_model.py
 ```
 
 **예상 출력**:
@@ -93,15 +116,31 @@ docker-compose exec spark spark-submit /home/spark/app/train_model.py
 |45.5|  3.0|              150.0|250.0|
 |67.2|  8.0|              200.0|450.0|
 ...
-[INFO] 모델 저장 완료: /home/spark/app/model
+[INFO] 모델 저장 완료: /app/model
 ```
 
 ### 4단계: Online Phase - 실시간 예측 (수강생 실습)
 
-#### Step 4-1: 스트리밍 서버 시작
+이 단계에서는 **컨테이너 안에서 nc 서버를 열고**, 같은 컨테이너 안의 Spark가 그 서버에 붙어서 데이터를 읽습니다. (localhost 기준이 같도록 단순화)
+
+#### Step 4-1: 컨테이너에서 nc 서버 시작 (먼저 실행)
+
+터미널 A (호스트)에서:
 
 ```bash
-docker-compose exec spark spark-submit /home/spark/app/predict_housing.py
+cd Spark-ML
+docker-compose exec spark nc -lk 9999
+```
+
+이 터미널은 **계속 열어둔 상태에서** 나중에 이 창에 직접 데이터를 입력합니다.
+
+#### Step 4-2: 컨테이너에서 스트리밍 시작
+
+터미널 B (호스트에서 새 터미널)에서:
+
+```bash
+cd Spark-ML
+docker-compose exec spark spark-submit /app/predict_housing.py
 ```
 
 **예상 출력**:
@@ -113,30 +152,17 @@ docker-compose exec spark spark-submit /home/spark/app/predict_housing.py
 [INFO] 데이터 파싱 완료
 [INFO] 예측 파이프라인 구성 완료
 [INFO] 스트리밍 시작...
-[INFO] 다른 터미널에서 다음 명령어로 데이터를 전송하세요:
-       echo '84,15,300' | nc localhost 9999
+[INFO] 컨테이너 nc 터미널(docker-compose exec spark nc -lk 9999)에서 데이터를 입력하세요
 ```
 
-#### Step 4-2: 다른 터미널에서 데이터 전송
+#### Step 4-3: nc 터미널에서 데이터 입력
 
-**⚠️ 새로운 터미널 창을 열어서 진행**
+다시 터미널 A (nc -lk 9999가 떠 있는 곳)로 돌아가서, 한 줄씩 입력 후 Enter:
 
-##### Mac 사용자
-
-```bash
-# nc (netcat) 설치 (이미 설치되어 있을 가능성 높음)
-# 없으면: brew install netcat
-
-# 데이터 전송
-echo "84,15,300" | nc localhost 9999
-echo "120,8,100" | nc localhost 9999
-echo "52.3,5,250" | nc localhost 9999
-```
-
-또는 여러 줄을 한 번에 전송:
-
-```bash
-(echo "84,15,300"; echo "120,8,100"; echo "52.3,5,250") | nc localhost 9999
+```text
+84,15,300⏎
+120,8,100⏎
+52.3,5,250⏎
 ```
 
 ##### Windows 사용자
@@ -192,6 +218,39 @@ echo "84,15,300" | nc localhost 9999
 ```
 
 ## 💡 핵심 학습 포인트
+
+### 🎯 주요 3가지 사용법
+
+#### 방법 1️⃣: spark-submit (배치 실행)
+
+```bash
+docker-compose exec spark spark-submit /app/train_model.py
+```
+
+- **용도**: 전체 파이프라인 자동 실행, 프로덕션 배포
+- **장점**: 파일 만들 필요 없음, 가장 간단
+
+#### 방법 2️⃣: PySpark 셸 (대화형 실습) ⭐ 추천
+
+```bash
+docker-compose exec spark /bin/bash
+pyspark --master local[*]
+```
+
+- **용도**: 빠른 데이터 탐색, 즉시 피드백
+- **장점**: 한 줄씩 입력 가능, 학습에 최적
+
+#### 방법 3️⃣: 커스텀 Python 스크립트 (유연함)
+
+```bash
+# /app/custom_analysis.py 작성 후
+docker-compose exec spark spark-submit /app/custom_analysis.py
+```
+
+- **용도**: 복잡한 분석, 코드 재사용
+- **장점**: 파일로 저장되어 재현 가능
+
+---
 
 ### 1. Pipeline 패턴
 
@@ -255,7 +314,7 @@ df_parsed = df_raw.select(
 1. `train_model.py`를 먼저 실행했는지 확인
 2. `app/model` 폴더가 생성되었는지 확인
    ```bash
-   docker-compose exec spark ls -la /home/spark/app/model
+   docker-compose exec spark ls -la /app/model
    ```
 
 ### 문제 2: 소켓 연결 안 됨
@@ -334,22 +393,65 @@ docker-compose down -v
 ### train_model.py 플로우
 
 1. SparkSession 생성
-2. CSV 데이터 로드
+2. CSV 데이터 로드 (`/app/data/sample_house.csv`)
 3. VectorAssembler로 특성 벡터화
 4. LinearRegression 모델 정의
 5. Pipeline 구성
 6. 모델 학습 (fit)
 7. 학습 결과 검증
-8. 모델 저장
+8. 모델 저장 (`/app/model/`)
 
 ### predict_housing.py 플로우
 
 1. SparkSession 생성
-2. 저장된 모델 로드
+2. 저장된 모델 로드 (`/app/model/`)
 3. 소켓으로부터 데이터 스트림 생성
 4. split() 함수로 문자열 파싱
 5. 모델로 예측 수행
 6. 결과를 콘솔에 실시간 출력
+
+## 💾 파일 수정 및 반영
+
+**로컬 머신에서 수정하면 자동 반영됩니다!**
+
+```bash
+# 로컬 에디터에서 app/train_model.py 수정 후 저장
+# → docker-compose.yml의 volume 설정으로 자동 동기화
+
+# 컨테이너에서 즉시 수정사항 확인
+docker-compose exec spark spark-submit /app/train_model.py
+```
+
+## 🔧 유용한 팁
+
+### 💡 Tip 1: 완전 초기화
+
+```bash
+# 컨테이너 종료 및 모든 변경사항 제거
+docker-compose down -v
+# 다시 시작
+docker-compose up -d
+```
+
+### 💡 Tip 2: 컨테이너 셸 접속
+
+```bash
+docker-compose exec spark /bin/bash
+# 이 안에서 ls, cd, vi 등 모든 명령어 사용 가능
+```
+
+### 💡 Tip 3: 스트리밍 테스트 (자동화)
+
+```bash
+# 한 터미널에서 스트리밍 시작
+docker-compose exec spark spark-submit /app/predict_housing.py
+
+# 다른 터미널에서 반복 데이터 전송
+for i in {1..5}; do
+  echo "84,15,300" | nc localhost 9999
+  sleep 1
+done
+```
 
 ## 🎓 심화 학습 과제
 
@@ -368,7 +470,24 @@ docker-compose down -v
 - [Structured Streaming Programming Guide](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
 - [MLlib: Main Guide](https://spark.apache.org/docs/latest/ml-guide.html)
 
-## 📄 라이선스
+## ℹ️ 버전 정보
+
+| 항목             | 기존                                     | 현재                             |
+| ---------------- | ---------------------------------------- | -------------------------------- |
+| Docker 이미지    | `jupyter/pyspark-notebook:latest` (5GB+) | `bitnami/pyspark:latest` (1.5GB) |
+| 마운트 경로      | `/home/jovyan/app`                       | `/app`                           |
+| 포함 내용        | Jupyter, Spark, Python                   | Spark, Python (최소 구성)        |
+| 이미지 크기 감소 | -                                        | **약 70% 축소** ✅               |
+
+## ✅ 프로젝트 평가
+
+- ✅ 가벼운 이미지: 빠른 다운로드 & 실행
+- ✅ 경로 단순화: 오타 감소
+- ✅ 다양한 학습 방법: spark-submit, PySpark 셸, 커스텀 스크립트
+- ✅ 실시간 스트리밍: 완전한 ML 파이프라인 경험
+- ✅ 자동 볼륨 동기화: 로컬 수정 즉시 반영
+
+---
 
 MIT License
 
